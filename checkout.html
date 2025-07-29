@@ -208,8 +208,13 @@
             submitBtn.disabled = true;
 
             try {
+                // Determine the correct API URL based on environment
+                const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+                    ? '/api/submit-order'  // Local development
+                    : `${window.location.origin}/api/submit-order`;  // Production
+                
                 // Send data to Express server
-                const response = await fetch('/api/submit-order', {
+                const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
