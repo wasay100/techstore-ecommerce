@@ -99,14 +99,18 @@ app.post('/api/submit-order', async (req, res) => {
 
         // Step 1: Create or find customer
         console.log('📝 Creating/finding customer...');
+        console.log('Customer data:', customerInfo);
         const customerId = await db.customers.findOrCreate(customerInfo);
+        console.log('✅ Customer created/found with ID:', customerId);
 
         // Step 2: Create order with items
         console.log('📋 Creating order...');
+        console.log('Cart items:', cartItems);
         const orderResult = await db.orders.create(customerId, {
             items: cartItems,
             deliveryNotes: deliveryNotes
         });
+        console.log('✅ Order created:', orderResult);
 
         // Step 3: Update product stock (optional)
         console.log('📦 Updating product stock...');
@@ -179,6 +183,9 @@ app.post('/api/submit-order', async (req, res) => {
 
     } catch (error) {
         console.error('❌ Order processing failed:', error);
+        console.error('Error stack:', error.stack);
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
         
         // Send appropriate error response
         if (error.code === 'ER_DUP_ENTRY') {
@@ -191,10 +198,20 @@ app.post('/api/submit-order', async (req, res) => {
                 success: false,
                 error: 'Invalid product reference'
             });
+        } else if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
+            res.status(500).json({
+                success: false,
+                error: 'Database connection failed. Please try again later.'
+            });
+        } else if (error.message && error.message.includes('ER_')) {
+            res.status(500).json({
+                success: false,
+                error: `Database error: ${error.message}`
+            });
         } else {
             res.status(500).json({
                 success: false,
-                error: 'Failed to process order. Please try again.'
+                error: `Order processing failed: ${error.message || 'Unknown error'}. Please try again.`
             });
         }
     }
