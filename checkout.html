@@ -201,10 +201,8 @@
                     city: document.getElementById('city').value,
                     pincode: document.getElementById('pincode').value
                 },
-                orderItems: cart,
-                totalAmount: total,
-                orderDate: new Date().toISOString(),
-                paymentMethod: 'Cash on Delivery'
+                cartItems: cart,  // Changed from orderItems to cartItems
+                deliveryNotes: document.getElementById('address').value + ', ' + document.getElementById('city').value + ' - ' + document.getElementById('pincode').value
             };
 
             // Show loading state
