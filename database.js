@@ -5,15 +5,25 @@ require('dotenv').config();
 let dbConfig;
 
 if (process.env.DATABASE_URL) {
-    // Railway deployment - use connection string
+    // Railway deployment - parse the DATABASE_URL
+    console.log('🔗 Using Railway DATABASE_URL for connection');
+    const url = new URL(process.env.DATABASE_URL);
     dbConfig = {
-        uri: process.env.DATABASE_URL,
+        host: url.hostname,
+        port: url.port || 3306,
+        user: url.username,
+        password: url.password,
+        database: url.pathname.slice(1), // Remove the leading '/'
         waitForConnections: true,
         connectionLimit: 10,
-        queueLimit: 0
+        queueLimit: 0,
+        ssl: {
+            rejectUnauthorized: false // Railway requires SSL
+        }
     };
 } else {
     // Local development - use individual variables
+    console.log('🏠 Using local database configuration');
     dbConfig = {
         host: process.env.DB_HOST || 'localhost',
         user: process.env.DB_USER || 'root',
@@ -29,16 +39,109 @@ if (process.env.DATABASE_URL) {
 // Create connection pool
 const pool = mysql.createPool(dbConfig);
 
-// Test database connection
+// Test database connection and setup tables
 async function testConnection() {
     try {
         const connection = await pool.getConnection();
         console.log('✅ Database connected successfully');
+        
+        // Initialize tables if they don't exist
+        await initializeTables(connection);
+        
         connection.release();
         return true;
     } catch (error) {
         console.error('❌ Database connection failed:', error.message);
+        console.error('Error details:', error);
         return false;
+    }
+}
+
+// Initialize database tables
+async function initializeTables(connection) {
+    try {
+        console.log('📋 Initializing database tables...');
+        
+        // Create customers table
+        await connection.execute(`
+            CREATE TABLE IF NOT EXISTS customers (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                full_name VARCHAR(255) NOT NULL,
+                email VARCHAR(255) UNIQUE NOT NULL,
+                phone VARCHAR(20) NOT NULL,
+                address TEXT NOT NULL,
+                city VARCHAR(100) NOT NULL,
+                postal_code VARCHAR(20) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+        `);
+        
+        // Create orders table
+        await connection.execute(`
+            CREATE TABLE IF NOT EXISTS orders (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                order_number VARCHAR(50) UNIQUE NOT NULL,
+                customer_id INT NOT NULL,
+                total_amount DECIMAL(10, 2) NOT NULL,
+                payment_method VARCHAR(50) DEFAULT 'Cash on Delivery',
+                order_status VARCHAR(50) DEFAULT 'Pending',
+                delivery_notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (customer_id) REFERENCES customers(id)
+            )
+        `);
+        
+        // Create order_items table
+        await connection.execute(`
+            CREATE TABLE IF NOT EXISTS order_items (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                order_id INT NOT NULL,
+                product_id INT NOT NULL,
+                product_name VARCHAR(255) NOT NULL,
+                product_price DECIMAL(10, 2) NOT NULL,
+                quantity INT NOT NULL,
+                subtotal DECIMAL(10, 2) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (order_id) REFERENCES orders(id)
+            )
+        `);
+        
+        // Create products table
+        await connection.execute(`
+            CREATE TABLE IF NOT EXISTS products (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                price DECIMAL(10, 2) NOT NULL,
+                description TEXT,
+                image_url VARCHAR(500),
+                stock_quantity INT DEFAULT 100,
+                category VARCHAR(100),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+        `);
+        
+        // Insert sample products if table is empty
+        const [productRows] = await connection.execute('SELECT COUNT(*) as count FROM products');
+        if (productRows[0].count === 0) {
+            console.log('📦 Inserting sample products...');
+            await connection.execute(`
+                INSERT INTO products (id, name, price, description, image_url, category) VALUES
+                (1, 'Premium Wireless Headphones', 199.99, 'High-quality wireless headphones with noise cancellation and 30-hour battery life.', 'Premium_Wireless_Headphones.png', 'Audio'),
+                (2, 'Smart Fitness Watch', 299.99, 'Advanced fitness tracking with heart rate monitor, GPS, and smartphone connectivity.', 'Smart_Fitness_Watch.png', 'Wearables'),
+                (3, '4K Webcam Pro', 149.99, 'Ultra HD webcam perfect for streaming, video calls, and content creation.', '4K_Webcam_Pro.png', 'Cameras'),
+                (4, 'Mechanical Gaming Keyboard', 179.99, 'RGB backlit mechanical keyboard with premium switches for gaming enthusiasts.', 'Mechanical_Gaming_Keyboard.png', 'Gaming'),
+                (5, 'Wireless Charging Pad', 79.99, 'Fast wireless charging pad compatible with all Qi-enabled devices.', 'Wireless_Charging_Pad.png', 'Accessories'),
+                (6, 'Bluetooth Speaker Pro', 129.99, 'Portable Bluetooth speaker with 360° sound and waterproof design.', 'Bluetooth_Speaker_Pro.png', 'Audio')
+            `);
+        }
+        
+        console.log('✅ Database tables initialized successfully');
+    } catch (error) {
+        console.error('❌ Failed to initialize database tables:', error);
+        throw error;
     }
 }
 
