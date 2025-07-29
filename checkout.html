@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - TechStore</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:400,600,700&display=swap">
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #111827 0%, #1f2937 50%, #374151 100%);
+            color: #e5e7eb;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            max-width: 500px;
+            margin: 3rem auto;
+            background: rgba(17, 24, 39, 0.97);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            padding: 2.5rem 2rem 2rem 2rem;
+            border: 1px solid rgba(75, 85, 99, 0.3);
+        }
+        .checkout-title {
+            text-align: center;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #f9fafb;
+            margin-bottom: 2rem;
+            letter-spacing: 1px;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-label {
+            display: block;
+            color: #e5e7eb;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #4b5563;
+            background: rgba(31, 41, 55, 0.7);
+            color: #f9fafb;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #6b7280;
+            background: rgba(31, 41, 55, 0.9);
+            box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.1);
+        }
+        .form-input::placeholder {
+            color: #9ca3af;
+        }
+        .order-summary {
+            background: linear-gradient(135deg, #374151, #4b5563);
+            color: #f9fafb;
+            border-radius: 12px;
+            padding: 1.5rem 1rem;
+            margin-bottom: 2rem;
+            border: 1px solid #6b7280;
+        }
+        .order-summary h3 {
+            margin-top: 0;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        .order-items {
+            margin-bottom: 1rem;
+        }
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+        .order-total {
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-align: right;
+            margin-top: 1rem;
+        }
+        .checkout-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #f9fafb, #e5e7eb);
+            color: #111827;
+            border: none;
+            padding: 16px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .checkout-btn:hover {
+            background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+            transform: translateY(-2px);
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 2rem;
+            color: #9ca3af;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+        .back-link:hover {
+            color: #f9fafb;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 1.2rem 0.5rem 1.5rem 0.5rem;
+            }
+            .checkout-title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="products.html" class="back-link">&larr; Back to Products</a>
+        <div class="checkout-title">Delivery Details</div>
+        <form id="deliveryForm">
+            <div class="form-group">
+                <label class="form-label" for="fullName">Full Name</label>
+                <input type="text" id="fullName" class="form-input" placeholder="Enter your full name" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="email">Email Address</label>
+                <input type="email" id="email" class="form-input" placeholder="Enter your email" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="phone">Phone Number</label>
+                <input type="tel" id="phone" class="form-input" placeholder="e.g. 9876543210" required pattern="[0-9]{10,15}">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="address">Delivery Address</label>
+                <textarea id="address" class="form-input" placeholder="Enter your full delivery address" rows="3" required></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="city">City</label>
+                <input type="text" id="city" class="form-input" placeholder="Enter your city" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="pincode">Pincode</label>
+                <input type="text" id="pincode" class="form-input" placeholder="e.g. 123456" required pattern="[0-9]{4,10}">
+            </div>
+            <div class="order-summary" id="orderSummary">
+                <h3>Order Summary</h3>
+                <div class="order-items" id="orderItems"></div>
+                <div class="order-total" id="orderTotal"></div>
+            </div>
+            <button type="submit" class="checkout-btn">Place Order (Cash on Delivery)</button>
+        </form>
+    </div>
+    <script>
+        // Load cart from localStorage
+        const cart = JSON.parse(localStorage.getItem('checkoutCart')) || [];
+        const orderItemsDiv = document.getElementById('orderItems');
+        const orderTotalDiv = document.getElementById('orderTotal');
+        let total = 0;
+        orderItemsDiv.innerHTML = '';
+        cart.forEach(item => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'order-item';
+            itemDiv.innerHTML = `<span>${item.name} x ${item.quantity}</span><span>$${(item.price * item.quantity).toFixed(2)}</span>`;
+            orderItemsDiv.appendChild(itemDiv);
+            total += item.price * item.quantity;
+        });
+        orderTotalDiv.textContent = `Total: $${total.toFixed(2)}`;
+
+
+        // Handle form submission
+        document.getElementById('deliveryForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (cart.length === 0) {
+                alert('Your cart is empty.');
+                return;
+            }
+
+            // Collect form data
+            const formData = {
+                customerInfo: {
+                    fullName: document.getElementById('fullName').value,
+                    email: document.getElementById('email').value,
+                    phone: document.getElementById('phone').value,
+                    address: document.getElementById('address').value,
+                    city: document.getElementById('city').value,
+                    pincode: document.getElementById('pincode').value
+                },
+                orderItems: cart,
+                totalAmount: total,
+                orderDate: new Date().toISOString(),
+                paymentMethod: 'Cash on Delivery'
+            };
+
+            // Show loading state
+            const submitBtn = document.querySelector('.checkout-btn');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Processing Order...';
+            submitBtn.disabled = true;
+
+            try {
+                // Send data to Express server
+                const response = await fetch('/api/submit-order', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Clear cart data
+                    localStorage.removeItem('techstore_cart');
+                    localStorage.removeItem('checkoutCart');
+                    
+                    // Store order number for confirmation page
+                    localStorage.setItem('lastOrderNumber', result.orderDetails.orderNumber);
+                    
+                    // Redirect to order confirmation page
+                    window.location.href = `order-confirmed.html?order=${result.orderDetails.orderNumber}`;
+                } else {
+                    alert(`❌ Order Failed: ${result.error || result.message}`);
+                }
+            } catch (error) {
+                console.error('Error submitting order:', error);
+                alert('❌ Network error. Please check your connection and try again.');
+            } finally {
+                // Reset button state
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

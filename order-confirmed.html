@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmed - TechStore</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: #e5e7eb;
+            background: linear-gradient(135deg, #111827 0%, #1f2937 50%, #374151 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background: rgba(17, 24, 39, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(75, 85, 99, 0.5);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #f8fafc, #cbd5e1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #f3f4f6;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #e5e7eb;
+            transform: translateY(-2px);
+        }
+
+        /* Main Content */
+        .confirmation-container {
+            padding: 3rem 0;
+        }
+
+        .success-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(16, 185, 129, 0.3);
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: checkmark 0.8s ease-in-out;
+        }
+
+        @keyframes checkmark {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .success-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+
+        .success-subtitle {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* Order Details Cards */
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .detail-card {
+            background: rgba(17, 24, 39, 0.9);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(75, 85, 99, 0.3);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-icon {
+            font-size: 2rem;
+            margin-right: 1rem;
+            padding: 0.5rem;
+            background: linear-gradient(135deg, #374151, #4b5563);
+            border-radius: 10px;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #f9fafb;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(75, 85, 99, 0.3);
+        }
+
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: #9ca3af;
+            font-weight: 500;
+        }
+
+        .detail-value {
+            color: #f9fafb;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .order-number {
+            color: #10b981;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+        }
+
+        /* Status Timeline */
+        .timeline-card {
+            grid-column: span 2;
+            background: rgba(17, 24, 39, 0.9);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(75, 85, 99, 0.3);
+        }
+
+        .timeline {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin: 2rem 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #10b981 25%, #374151 25%);
+            z-index: 1;
+        }
+
+        .timeline-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .timeline-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .timeline-step.completed .timeline-icon {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+
+        .timeline-step.current .timeline-icon {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+            animation: pulse 2s infinite;
+        }
+
+        .timeline-step.pending .timeline-icon {
+            background: #374151;
+            color: #9ca3af;
+            border: 2px solid #4b5563;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .timeline-label {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #d1d5db;
+            font-weight: 500;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 3rem;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #f9fafb, #e5e7eb);
+            color: #111827;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #f9fafb;
+            border: 2px solid #6b7280;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            border-color: #9ca3af;
+            background: rgba(75, 85, 99, 0.2);
+        }
+
+        /* Loading States */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #374151;
+            border-top: 4px solid #10b981;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Order Items Section */
+        .order-items {
+            background: rgba(17, 24, 39, 0.9);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(75, 85, 99, 0.3);
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .items-table th,
+        .items-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(75, 85, 99, 0.3);
+        }
+
+        .items-table th {
+            background: rgba(55, 65, 81, 0.5);
+            color: #f9fafb;
+            font-weight: 600;
+        }
+
+        .items-table td {
+            color: #d1d5db;
+        }
+
+        .total-row {
+            background: rgba(16, 185, 129, 0.1);
+            font-weight: 600;
+            color: #10b981;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .details-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .timeline-card {
+                grid-column: span 1;
+            }
+
+            .timeline {
+                flex-direction: column;
+                gap: 2rem;
+            }
+
+            .timeline::before {
+                display: none;
+            }
+
+            .success-title {
+                font-size: 2rem;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 300px;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <div class="logo">TechStore</div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="products.html">Products</a></li>
+                <li><a href="#" onclick="window.print()">Print Receipt</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="confirmation-container">
+            <!-- Loading State -->
+            <div id="loadingState" class="loading">
+                <div class="spinner"></div>
+                <h2>Loading your order details...</h2>
+                <p>Please wait while we fetch your order information.</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorState" class="loading" style="display: none;">
+                <div style="font-size: 4rem; color: #ef4444; margin-bottom: 1rem;">❌</div>
+                <h2 style="color: #ef4444;">Order Not Found</h2>
+                <p>We couldn't find your order. Please check your order number and try again.</p>
+                <div class="action-buttons" style="margin-top: 2rem;">
+                    <a href="index.html" class="btn btn-primary">Return to Home</a>
+                </div>
+            </div>
+
+            <!-- Success State -->
+            <div id="successState" style="display: none;">
+                <!-- Success Header -->
+                <div class="success-header">
+                    <div class="success-icon">✅</div>
+                    <h1 class="success-title">Order Confirmed!</h1>
+                    <p class="success-subtitle">Thank you for your purchase. Your order has been successfully placed.</p>
+                </div>
+
+                <!-- Order Details -->
+                <div class="details-grid">
+                    <!-- Order Information -->
+                    <div class="detail-card">
+                        <div class="card-header">
+                            <div class="card-icon">📋</div>
+                            <h3 class="card-title">Order Information</h3>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Order Number:</span>
+                            <span class="detail-value order-number" id="orderNumber">Loading...</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Order Date:</span>
+                            <span class="detail-value" id="orderDate">Loading...</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Total Amount:</span>
+                            <span class="detail-value" id="totalAmount">Loading...</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Payment Method:</span>
+                            <span class="detail-value">Cash on Delivery</span>
+                        </div>
+                    </div>
+
+                    <!-- Delivery Information -->
+                    <div class="detail-card">
+                        <div class="card-header">
+                            <div class="card-icon">🚚</div>
+                            <h3 class="card-title">Delivery Information</h3>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Customer:</span>
+                            <span class="detail-value" id="customerName">Loading...</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Phone:</span>
+                            <span class="detail-value" id="customerPhone">Loading...</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Address:</span>
+                            <span class="detail-value" id="customerAddress">Loading...</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Estimated Delivery:</span>
+                            <span class="detail-value">2-3 business days</span>
+                        </div>
+                    </div>
+
+                    <!-- Order Status Timeline -->
+                    <div class="timeline-card">
+                        <div class="card-header">
+                            <div class="card-icon">📦</div>
+                            <h3 class="card-title">Order Status</h3>
+                        </div>
+                        <div class="timeline">
+                            <div class="timeline-step completed">
+                                <div class="timeline-icon">✓</div>
+                                <div class="timeline-label">Order<br>Placed</div>
+                            </div>
+                            <div class="timeline-step current">
+                                <div class="timeline-icon">⏳</div>
+                                <div class="timeline-label">Processing<br>Order</div>
+                            </div>
+                            <div class="timeline-step pending">
+                                <div class="timeline-icon">📦</div>
+                                <div class="timeline-label">Preparing<br>Shipment</div>
+                            </div>
+                            <div class="timeline-step pending">
+                                <div class="timeline-icon">🚚</div>
+                                <div class="timeline-label">Out for<br>Delivery</div>
+                            </div>
+                            <div class="timeline-step pending">
+                                <div class="timeline-icon">🏠</div>
+                                <div class="timeline-label">Delivered</div>
+                            </div>
+                        </div>
+                        <div style="text-align: center; margin-top: 1rem; color: #f59e0b; font-weight: 600;">
+                            ⏳ Your order is currently being processed
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Items -->
+                <div class="order-items">
+                    <div class="card-header">
+                        <div class="card-icon">🛍️</div>
+                        <h3 class="card-title">Order Items</h3>
+                    </div>
+                    <table class="items-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orderItems">
+                            <tr>
+                                <td colspan="4" style="text-align: center;">Loading items...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <a href="products.html" class="btn btn-primary">
+                        🛍️ Continue Shopping
+                    </a>
+                    <button onclick="window.print()" class="btn btn-secondary">
+                        🖨️ Print Receipt
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Get order number from URL parameters
+        function getOrderNumber() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('order') || localStorage.getItem('lastOrderNumber');
+        }
+
+        // Format currency
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD'
+            }).format(amount);
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Load order details
+        async function loadOrderDetails() {
+            const orderNumber = getOrderNumber();
+            
+            if (!orderNumber) {
+                showError();
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/order/${orderNumber}`);
+                
+                if (!response.ok) {
+                    throw new Error('Order not found');
+                }
+
+                const data = await response.json();
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to load order');
+                }
+
+                displayOrderDetails(data.order);
+                showSuccess();
+
+            } catch (error) {
+                console.error('Error loading order:', error);
+                showError();
+            }
+        }
+
+        // Display order details
+        function displayOrderDetails(order) {
+            // Basic order information
+            document.getElementById('orderNumber').textContent = order.order_number;
+            document.getElementById('orderDate').textContent = formatDate(order.created_at);
+            document.getElementById('totalAmount').textContent = formatCurrency(order.total_amount);
+
+            // Customer information
+            document.getElementById('customerName').textContent = order.full_name;
+            document.getElementById('customerPhone').textContent = order.phone;
+            document.getElementById('customerAddress').textContent = 
+                `${order.address}, ${order.city} ${order.postal_code}`;
+
+            // Order items
+            const itemsTableBody = document.getElementById('orderItems');
+            itemsTableBody.innerHTML = '';
+
+            let totalAmount = 0;
+            order.items.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.product_name}</td>
+                    <td>${item.quantity}</td>
+                    <td>${formatCurrency(item.product_price)}</td>
+                    <td>${formatCurrency(item.subtotal)}</td>
+                `;
+                itemsTableBody.appendChild(row);
+                totalAmount += parseFloat(item.subtotal);
+            });
+
+            // Add total row
+            const totalRow = document.createElement('tr');
+            totalRow.className = 'total-row';
+            totalRow.innerHTML = `
+                <td colspan="3"><strong>Total Amount:</strong></td>
+                <td><strong>${formatCurrency(totalAmount)}</strong></td>
+            `;
+            itemsTableBody.appendChild(totalRow);
+
+            // Update page title
+            document.title = `Order ${order.order_number} Confirmed - TechStore`;
+        }
+
+        // Show loading state
+        function showLoading() {
+            document.getElementById('loadingState').style.display = 'block';
+            document.getElementById('errorState').style.display = 'none';
+            document.getElementById('successState').style.display = 'none';
+        }
+
+        // Show error state
+        function showError() {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('errorState').style.display = 'block';
+            document.getElementById('successState').style.display = 'none';
+        }
+
+        // Show success state
+        function showSuccess() {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('errorState').style.display = 'none';
+            document.getElementById('successState').style.display = 'block';
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show loading state initially
+            showLoading();
+            
+            // Load order details
+            setTimeout(() => {
+                loadOrderDetails();
+            }, 1000); // Small delay for better UX
+
+            // Clear localStorage order number after successful load
+            setTimeout(() => {
+                localStorage.removeItem('lastOrderNumber');
+            }, 5000);
+        });
+
+        // Handle browser back button
+        window.addEventListener('popstate', function() {
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>
