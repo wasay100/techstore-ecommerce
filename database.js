@@ -4,23 +4,85 @@ require('dotenv').config();
 // Database configuration - supports both Railway URL and individual variables
 let dbConfig;
 
+console.log('🔧 Database Configuration Debug:');
+console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL);
+console.log('DATABASE_URL length:', process.env.DATABASE_URL ? process.env.DATABASE_URL.length : 0);
+console.log('MYSQL_HOST exists:', !!process.env.MYSQL_HOST);
+console.log('MYSQL_USER exists:', !!process.env.MYSQL_USER);
+console.log('MYSQL_PASSWORD exists:', !!process.env.MYSQL_PASSWORD);
+console.log('MYSQL_DATABASE exists:', !!process.env.MYSQL_DATABASE);
+
 if (process.env.DATABASE_URL) {
-    // Railway deployment - parse the DATABASE_URL
-    console.log('🔗 Using Railway DATABASE_URL for connection');
-    const url = new URL(process.env.DATABASE_URL);
+    try {
+        // Railway deployment - parse the DATABASE_URL
+        console.log('🔗 Using Railway DATABASE_URL for connection');
+        console.log('Raw DATABASE_URL:', process.env.DATABASE_URL.substring(0, 20) + '...');
+        
+        const url = new URL(process.env.DATABASE_URL);
+        console.log('Parsed URL components:');
+        console.log('- Protocol:', url.protocol);
+        console.log('- Hostname:', url.hostname);
+        console.log('- Port:', url.port);
+        console.log('- Username:', url.username);
+        console.log('- Database:', url.pathname.slice(1));
+        
+        dbConfig = {
+            host: url.hostname,
+            port: parseInt(url.port) || 3306,
+            user: url.username,
+            password: url.password,
+            database: url.pathname.slice(1), // Remove the leading '/'
+            waitForConnections: true,
+            connectionLimit: 10,
+            queueLimit: 0,
+            ssl: {
+                rejectUnauthorized: false // Railway requires SSL
+            },
+            acquireTimeout: 60000,
+            timeout: 60000,
+            reconnect: true
+        };
+        
+        console.log('Final DB Config (password hidden):');
+        console.log({
+            host: dbConfig.host,
+            port: dbConfig.port,
+            user: dbConfig.user,
+            database: dbConfig.database,
+            ssl: dbConfig.ssl
+        });
+        
+    } catch (urlError) {
+        console.error('❌ Failed to parse DATABASE_URL:', urlError);
+        throw new Error('Invalid DATABASE_URL format');
+    }
+} else if (process.env.MYSQL_HOST) {
+    // Railway might provide individual MySQL variables
+    console.log('🚄 Using Railway individual MySQL variables');
     dbConfig = {
-        host: url.hostname,
-        port: url.port || 3306,
-        user: url.username,
-        password: url.password,
-        database: url.pathname.slice(1), // Remove the leading '/'
+        host: process.env.MYSQL_HOST,
+        port: parseInt(process.env.MYSQL_PORT) || 3306,
+        user: process.env.MYSQL_USER,
+        password: process.env.MYSQL_PASSWORD,
+        database: process.env.MYSQL_DATABASE,
         waitForConnections: true,
         connectionLimit: 10,
         queueLimit: 0,
         ssl: {
-            rejectUnauthorized: false // Railway requires SSL
-        }
+            rejectUnauthorized: false
+        },
+        acquireTimeout: 60000,
+        timeout: 60000,
+        reconnect: true
     };
+    
+    console.log('Railway MySQL Config (password hidden):');
+    console.log({
+        host: dbConfig.host,
+        port: dbConfig.port,
+        user: dbConfig.user,
+        database: dbConfig.database
+    });
 } else {
     // Local development - use individual variables
     console.log('🏠 Using local database configuration');
@@ -41,18 +103,64 @@ const pool = mysql.createPool(dbConfig);
 
 // Test database connection and setup tables
 async function testConnection() {
+    let connection;
     try {
-        const connection = await pool.getConnection();
+        console.log('🔍 Testing database connection...');
+        
+        // Try to get a connection from the pool
+        connection = await pool.getConnection();
         console.log('✅ Database connected successfully');
+        
+        // Test a simple query
+        const [rows] = await connection.execute('SELECT 1 as test');
+        console.log('✅ Test query successful:', rows[0]);
         
         // Initialize tables if they don't exist
         await initializeTables(connection);
         
-        connection.release();
         return true;
     } catch (error) {
         console.error('❌ Database connection failed:', error.message);
-        console.error('Error details:', error);
+        console.error('Error code:', error.code);
+        console.error('Error errno:', error.errno);
+        console.error('Error stack:', error.stack);
+        
+        // Try alternative connection if Railway URL parsing failed
+        if (process.env.DATABASE_URL && error.code === 'ENOTFOUND') {
+            console.log('🔄 Trying alternative DATABASE_URL parsing...');
+            return await tryAlternativeConnection();
+        }
+        
+        return false;
+    } finally {
+        if (connection) {
+            connection.release();
+        }
+    }
+}
+
+// Alternative connection method for Railway
+async function tryAlternativeConnection() {
+    try {
+        // Try using the DATABASE_URL directly with mysql2
+        const alternativePool = mysql.createPool(process.env.DATABASE_URL + '?ssl={"rejectUnauthorized":false}');
+        
+        const connection = await alternativePool.getConnection();
+        console.log('✅ Alternative database connection successful');
+        
+        // Test query
+        const [rows] = await connection.execute('SELECT 1 as test');
+        console.log('✅ Alternative test query successful:', rows[0]);
+        
+        connection.release();
+        
+        // Replace the global pool with the working one
+        await pool.end();
+        global.pool = alternativePool;
+        
+        return true;
+    } catch (altError) {
+        console.error('❌ Alternative connection also failed:', altError.message);
         return false;
     }
 }
