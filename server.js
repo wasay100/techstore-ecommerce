@@ -41,6 +41,106 @@ app.get('/order-confirmed.html', (req, res) => {
 
 // API Routes
 
+// Initialize database tables (for Railway deployment)
+app.get('/api/init-db', async (req, res) => {
+    try {
+        console.log('🔧 Manual database initialization requested...');
+        
+        const connection = await db.pool.getConnection();
+        
+        // Create customers table
+        await connection.execute(`
+            CREATE TABLE IF NOT EXISTS customers (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                full_name VARCHAR(255) NOT NULL,
+                email VARCHAR(255) UNIQUE NOT NULL,
+                phone VARCHAR(20) NOT NULL,
+                address TEXT NOT NULL,
+                city VARCHAR(100) NOT NULL,
+                postal_code VARCHAR(20) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+        `);
+        
+        // Create orders table
+        await connection.execute(`
+            CREATE TABLE IF NOT EXISTS orders (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                order_number VARCHAR(50) UNIQUE NOT NULL,
+                customer_id INT NOT NULL,
+                total_amount DECIMAL(10, 2) NOT NULL,
+                payment_method VARCHAR(50) DEFAULT 'Cash on Delivery',
+                order_status VARCHAR(50) DEFAULT 'Pending',
+                delivery_notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (customer_id) REFERENCES customers(id)
+            )
+        `);
+        
+        // Create order_items table
+        await connection.execute(`
+            CREATE TABLE IF NOT EXISTS order_items (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                order_id INT NOT NULL,
+                product_id INT NOT NULL,
+                product_name VARCHAR(255) NOT NULL,
+                product_price DECIMAL(10, 2) NOT NULL,
+                quantity INT NOT NULL,
+                subtotal DECIMAL(10, 2) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (order_id) REFERENCES orders(id)
+            )
+        `);
+        
+        // Create products table
+        await connection.execute(`
+            CREATE TABLE IF NOT EXISTS products (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                price DECIMAL(10, 2) NOT NULL,
+                description TEXT,
+                image_url VARCHAR(500),
+                stock_quantity INT DEFAULT 100,
+                category VARCHAR(100),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+        `);
+        
+        // Insert sample products if table is empty
+        const [productRows] = await connection.execute('SELECT COUNT(*) as count FROM products');
+        if (productRows[0].count === 0) {
+            console.log('📦 Inserting sample products...');
+            await connection.execute(`
+                INSERT INTO products (id, name, price, description, image_url, category) VALUES
+                (1, 'Premium Wireless Headphones', 199.99, 'High-quality wireless headphones with noise cancellation and 30-hour battery life.', 'Premium_Wireless_Headphones.png', 'Audio'),
+                (2, 'Smart Fitness Watch', 299.99, 'Advanced fitness tracking with heart rate monitor, GPS, and smartphone connectivity.', 'Smart_Fitness_Watch.png', 'Wearables'),
+                (3, '4K Webcam Pro', 149.99, 'Ultra HD webcam perfect for streaming, video calls, and content creation.', '4K_Webcam_Pro.png', 'Cameras'),
+                (4, 'Mechanical Gaming Keyboard', 179.99, 'RGB backlit mechanical keyboard with premium switches for gaming enthusiasts.', 'Mechanical_Gaming_Keyboard.png', 'Gaming'),
+                (5, 'Wireless Charging Pad', 79.99, 'Fast wireless charging pad compatible with all Qi-enabled devices.', 'Wireless_Charging_Pad.png', 'Accessories'),
+                (6, 'Bluetooth Speaker Pro', 129.99, 'Portable Bluetooth speaker with 360° sound and waterproof design.', 'Bluetooth_Speaker_Pro.png', 'Audio')
+            `);
+        }
+        
+        connection.release();
+        
+        console.log('✅ Database tables initialized successfully via API');
+        res.json({
+            success: true,
+            message: 'Database tables created successfully!'
+        });
+        
+    } catch (error) {
+        console.error('❌ Failed to initialize database:', error);
+        res.status(500).json({
+            success: false,
+            error: `Database initialization failed: ${error.message}`
+        });
+    }
+});
+
 // Get all products from database
 app.get('/api/products', async (req, res) => {
     try {

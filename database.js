@@ -6,13 +6,66 @@ let dbConfig;
 
 console.log('🔧 Database Configuration Debug:');
 console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL);
-console.log('DATABASE_URL length:', process.env.DATABASE_URL ? process.env.DATABASE_URL.length : 0);
-console.log('MYSQL_HOST exists:', !!process.env.MYSQL_HOST);
-console.log('MYSQL_USER exists:', !!process.env.MYSQL_USER);
-console.log('MYSQL_PASSWORD exists:', !!process.env.MYSQL_PASSWORD);
-console.log('MYSQL_DATABASE exists:', !!process.env.MYSQL_DATABASE);
+console.log('MYSQL_URL exists:', !!process.env.MYSQL_URL);
+console.log('MYSQLHOST exists:', !!process.env.MYSQLHOST);
+console.log('MYSQLUSER exists:', !!process.env.MYSQLUSER);
+console.log('MYSQLPASSWORD exists:', !!process.env.MYSQLPASSWORD);
+console.log('MYSQLDATABASE exists:', !!process.env.MYSQLDATABASE);
+console.log('MYSQLPORT exists:', !!process.env.MYSQLPORT);
 
-if (process.env.DATABASE_URL) {
+if (process.env.MYSQLHOST) {
+    // Railway provides individual MySQL variables
+    console.log('🚄 Using Railway individual MySQL variables');
+    dbConfig = {
+        host: process.env.MYSQLHOST,
+        port: parseInt(process.env.MYSQLPORT) || 3306,
+        user: process.env.MYSQLUSER,
+        password: process.env.MYSQLPASSWORD,
+        database: process.env.MYSQLDATABASE,
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0,
+        ssl: {
+            rejectUnauthorized: false
+        },
+        acquireTimeout: 60000,
+        timeout: 60000,
+        reconnect: true
+    };
+    
+    console.log('Railway MySQL Config (password hidden):');
+    console.log({
+        host: dbConfig.host,
+        port: dbConfig.port,
+        user: dbConfig.user,
+        database: dbConfig.database
+    });
+} else if (process.env.MYSQL_URL) {
+    // Try MYSQL_URL if it exists
+    try {
+        console.log('🔗 Using MYSQL_URL for connection');
+        const url = new URL(process.env.MYSQL_URL);
+        dbConfig = {
+            host: url.hostname,
+            port: parseInt(url.port) || 3306,
+            user: url.username,
+            password: url.password,
+            database: url.pathname.slice(1),
+            waitForConnections: true,
+            connectionLimit: 10,
+            queueLimit: 0,
+            ssl: {
+                rejectUnauthorized: false
+            },
+            acquireTimeout: 60000,
+            timeout: 60000,
+            reconnect: true
+        };
+    } catch (urlError) {
+        console.error('❌ Failed to parse MYSQL_URL:', urlError);
+        throw new Error('Invalid MYSQL_URL format');
+    }
+} else if (process.env.DATABASE_URL) {
     try {
         // Railway deployment - parse the DATABASE_URL
         console.log('🔗 Using Railway DATABASE_URL for connection');
@@ -57,8 +110,8 @@ if (process.env.DATABASE_URL) {
         throw new Error('Invalid DATABASE_URL format');
     }
 } else if (process.env.MYSQL_HOST) {
-    // Railway might provide individual MySQL variables
-    console.log('🚄 Using Railway individual MySQL variables');
+    // Fallback for other MYSQL_HOST format
+    console.log('🚄 Using MYSQL_HOST variables');
     dbConfig = {
         host: process.env.MYSQL_HOST,
         port: parseInt(process.env.MYSQL_PORT) || 3306,
@@ -75,14 +128,6 @@ if (process.env.DATABASE_URL) {
         timeout: 60000,
         reconnect: true
     };
-    
-    console.log('Railway MySQL Config (password hidden):');
-    console.log({
-        host: dbConfig.host,
-        port: dbConfig.port,
-        user: dbConfig.user,
-        database: dbConfig.database
-    });
 } else {
     // Local development - use individual variables
     console.log('🏠 Using local database configuration');
