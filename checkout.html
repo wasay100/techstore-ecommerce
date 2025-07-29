@@ -153,10 +153,6 @@
                 <label class="form-label" for="city">City</label>
                 <input type="text" id="city" class="form-input" placeholder="Enter your city" required>
             </div>
-            <div class="form-group">
-                <label class="form-label" for="pincode">Pincode</label>
-                <input type="text" id="pincode" class="form-input" placeholder="e.g. 123456" required pattern="[0-9]{4,10}">
-            </div>
             <div class="order-summary" id="orderSummary">
                 <h3>Order Summary</h3>
                 <div class="order-items" id="orderItems"></div>
@@ -199,10 +195,10 @@
                     phone: document.getElementById('phone').value,
                     address: document.getElementById('address').value,
                     city: document.getElementById('city').value,
-                    pincode: document.getElementById('pincode').value
+                    postalCode: '00000'  // Default postal code since it's not needed
                 },
                 cartItems: cart,  // Changed from orderItems to cartItems
-                deliveryNotes: document.getElementById('address').value + ', ' + document.getElementById('city').value + ' - ' + document.getElementById('pincode').value
+                deliveryNotes: document.getElementById('address').value + ', ' + document.getElementById('city').value
             };
 
             // Show loading state

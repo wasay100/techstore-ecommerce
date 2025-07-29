@@ -79,7 +79,7 @@ app.post('/api/submit-order', async (req, res) => {
         }
 
         // Validate customer info
-        const requiredFields = ['fullName', 'email', 'phone', 'address', 'city', 'postalCode'];
+        const requiredFields = ['fullName', 'email', 'phone', 'address', 'city'];
         for (const field of requiredFields) {
             if (!customerInfo[field]) {
                 console.log(`❌ Validation failed: Missing ${field}`);
@@ -88,6 +88,11 @@ app.post('/api/submit-order', async (req, res) => {
                     error: `Missing required field: ${field}`
                 });
             }
+        }
+
+        // Set default postalCode if not provided
+        if (!customerInfo.postalCode) {
+            customerInfo.postalCode = '00000';
         }
 
         console.log('✅ Order validation passed');
